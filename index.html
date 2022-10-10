@@ -1,9 +1,335 @@
 <!DOCTYPE html>
 <html>
-<body>
+<head>
+    <title>Subspace-Hybrid Beamforming Demo</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.rawgit.com/download/polymer-cdn/1.5.0/lib/webcomponentsjs/webcomponents-lite.min.js"></script>
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+    <link rel="stylesheet" href="./css/trackswitch.css" />
+    <style media="screen">
+        body {font-family: sans-serif;}
+    </style>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {font-family: Arial;}
 
-<h1>My First Heading</h1>
-<p>My first paragraph.</p>
+        /* Style the tab */
+        .tab {
+          overflow: hidden;
+          border: 1px solid #ccc;
+          background-color: #f1f1f1;
+        }
+
+        /* Style the buttons inside the tab */
+        .tab button {
+          background-color: inherit;
+          float: left;
+          border: none;
+          outline: none;
+          cursor: pointer;
+          padding: 14px 16px;
+          transition: 0.3s;
+          font-size: 17px;
+        }
+
+        /* Change background color of buttons on hover */
+        .tab button:hover {
+          background-color: #ddd;
+        }
+
+        /* Create an active/current tablink class */
+        .tab button.active {
+          background-color: #ccc;
+        }
+
+        /* Style the tab content */
+        .tabcontent {
+          display: none;
+          padding: 6px 12px;
+          border: 1px solid #ccc;
+          border-top: none;
+        }
+        
+        
+        /* Three image containers (use 25% for four, and 50% for two, etc) */
+       .column {
+         float: left;
+         width: 33.33%;
+         padding: 5px;
+       }
+
+       /* Clear floats after image containers */
+       .row::after {
+         content: "";
+         clear: both;
+         display: table;
+       }
+    </style>
+    
+</head>
+<body>
+    
+    <h1> 21-Sep-2022 SS-Hybrid Beamformer using (mini) EasyCom dataset </h1>
+    by Sina Hafezi<br>
+        
+    <p>Scenario:</p>
+    <ul>
+      <li>6 sec chunks from EasyCom dataset</li>
+      <li>Categorised based on number of active sources</li>
+    </ul>
+    
+    <p>List of definitions:</p>
+    <ul>
+      <li>(E): Enhanced signal based on a method</li>
+      <li>(H): Reference Headset close-talking mic</li>
+      <li>(A): Audio Demo of the enhanced signals and their spectrogram</li>
+      <li>(V): Video Demo of the animated beam patterns</li>
+      <li>VAD: Voice Activity Detection</li>
+      <li>SS: Signal Subspace</li>
+      <li>ATF: Acoustic Transfer Function</li>
+      <li>nSources: Total number of active sources within the chunk (based on VADs)</li>
+    </ul>
+    
+    <p>List of Methods:</p>
+    <ul>
+      <li>Passthrough: Un-processed signal</li>
+      <li>Iso: Isotropic-MVDR (Superdirective)</li>
+      <li>SS-Hybrid: Subspace-Hybrid (Proposed)</li>
+      <li>SS-HybridX: Extended Subspace-Hybrid (Proposed)</li>
+      <li>MPDR: Minimum Power Distortionless Response</li>
+    </ul>
+
+    <p>Processing Settings:</p>
+    <ul>
+      <li>Fs: 10kHz</li>
+      <li>Mics: [1,2,3,4,5,6] </li>
+      <li>Reference Channel: 2 (centre mic on the glasses)</li>
+    </ul>
+    
+
+
+    <h2>Varying nSources</h2>
+    <p>Tabs at Top: Different Scenarios - Audio (A) and Video (V)</p>
+    <h3>Audio Demos (A)</h3>
+    Tabs at bottom: Different Beamformers/Enhancemnets - Enhanced at array (E) and Headset close-talking mic (H) <br>
+    <p>Plots Guide</p>
+    <ul>
+      <li>Top Row: Waveform & Spectrogram of the selected track (via bottom tabs)</li>
+      <li>Middle Row: Spectrogram of the reference headset close-talking mic for the target source</li>
+      <li>Bottm Row: VAD labels and Headset close-talking signals for all available source(s)</li>
+    </ul>
+    
+    <h3>Video Demos (V)</h3>
+    <p>Plots Guide</p>
+    <ul>
+      <li>2D color surf: Instanteneous narrowband beam pattern @ horizon with vertical lines as source(s) azimuth</li>
+      <li>Polar plot: Instanteneous wideband (a-weighted) beam pattern @ horizon with colored circles as source(s) azimuth</li>
+      <li>NOTE 1: Beam patterns are normalized by the ATF of the target DOA @ the array's reference channel</li>
+      <li>NOTE 2: Displayed beam pattern response @ the target may not be flat depending on the target DOA's elevation (off-horizon)</li>
+    </ul>
+
+    <div class="tab">
+      <button class="tablinks" onclick="openCity(event, 'A_2_3')" id="defaultOpen">(A)2-Src-3</button>
+      <button class="tablinks" onclick="openCity(event, 'V_2_3')">(V)2-Src-3</button>
+      <button class="tablinks" onclick="openCity(event, 'A_2_13')">(A)2-Src-13</button>
+      <button class="tablinks" onclick="openCity(event, 'A_2_20')">(A)2-Src-20</button>
+      <button class="tablinks" onclick="openCity(event, 'A_1_9')">(A)1-Src-9</button>
+      <button class="tablinks" onclick="openCity(event, 'A_1_14')">(A)1-Src-14</button>
+      <button class="tablinks" onclick="openCity(event, 'A_3_2')">(A)3-Src-2</button>
+    </div>
+
+    
+    
+    <div id="A_2_3" class="tabcontent">
+      <p>nSources: 2, Trial: 003, Session: 3, File: 10-00-415, time: 15.25 - 21.20 s</p>
+      <div class="player">
+          <img class="seekable" data-seek-margin-left="4.0" data-seek-margin-right="5.9" src="multimedia/20220921_beamformers_SSHybrid/2_3/hyb_stft_ref.png">
+          <ts-track title="(H) Reference" data-img="multimedia/20220921_beamformers_SSHybrid/2_3/hyb_stft_ref.png">
+              <ts-source src="multimedia/20220921_beamformers_SSHybrid/2_3/enh_10k_ref.wav" type="audio/wav"></ts-source>
+              
+          <ts-track title="Passthrough" data-img="multimedia/20220921_beamformers_SSHybrid/2_3/hyb_stft_pass.png">
+              <ts-source src="multimedia/20220921_beamformers_SSHybrid/2_3/enh_10k_pass.wav" type="audio/wav"></ts-source>
+              
+          <ts-track title="(E) Iso" data-img="multimedia/20220921_beamformers_SSHybrid/2_3/hyb_stft_iso.png">
+              <ts-source src="multimedia/20220921_beamformers_SSHybrid/2_3/enh_10k_iso.wav" type="audio/wav"></ts-source>
+              
+          <ts-track title="(E) SSHyb" data-img="multimedia/20220921_beamformers_SSHybrid/2_3/hyb_stft_sshyb.png">
+              <ts-source src="multimedia/20220921_beamformers_SSHybrid/2_3/enh_10k_sshyb.wav" type="audio/wav"></ts-source>
+              
+          <ts-track title="(E) SSHybX" data-img="multimedia/20220921_beamformers_SSHybrid/2_3/hyb_stft_sshyb1300.png">
+              <ts-source src="multimedia/20220921_beamformers_SSHybrid/2_3/enh_10k_sshyb1300.wav" type="audio/wav"></ts-source>
+              
+          <ts-track title="(E) MPDR" data-img="multimedia/20220921_beamformers_SSHybrid/2_3/hyb_stft_mpdr.png">
+              <ts-source src="multimedia/20220921_beamformers_SSHybrid/2_3/enh_10k_mpdr.wav" type="audio/wav"></ts-source>
+      </div>
+   </div>
+    
+    <div id="V_2_3" class="tabcontent">
+        <p>nSources: 2, Trial: 003, Session: 3, File: 10-00-415, time: 15.25 - 21.20 s</p>
+        <video width="1280" height="620" autoplay controls loop>
+         <source src="multimedia/20220921_beamformers_SSHybrid/2_3/beampatterns.mp4" type="video/mp4">
+       </video>
+    </div>
+      
+    <div id="A_2_13" class="tabcontent">
+        <p>nSources: 2, Trial: 013, Session: 3, File: 08-00-387, time: 33.65 - 39.60 s</p>
+        <div class="player">
+            <img class="seekable" data-seek-margin-left="4.0" data-seek-margin-right="5.9" src="multimedia/20220921_beamformers_SSHybrid/2_13/hyb_stft_ref.png">
+            <ts-track title="(H) Reference" data-img="multimedia/20220921_beamformers_SSHybrid/2_13/hyb_stft_ref.png">
+                <ts-source src="multimedia/20220921_beamformers_SSHybrid/2_13/enh_10k_ref.wav" type="audio/wav"></ts-source>
+                
+            <ts-track title="Passthrough" data-img="multimedia/20220921_beamformers_SSHybrid/2_13/hyb_stft_pass.png">
+                <ts-source src="multimedia/20220921_beamformers_SSHybrid/2_13/enh_10k_pass.wav" type="audio/wav"></ts-source>
+                
+            <ts-track title="(E) Iso" data-img="multimedia/20220921_beamformers_SSHybrid/2_13/hyb_stft_iso.png">
+                <ts-source src="multimedia/20220921_beamformers_SSHybrid/2_13/enh_10k_iso.wav" type="audio/wav"></ts-source>
+                
+            <ts-track title="(E) SSHyb" data-img="multimedia/20220921_beamformers_SSHybrid/2_13/hyb_stft_sshyb.png">
+                <ts-source src="multimedia/20220921_beamformers_SSHybrid/2_13/enh_10k_sshyb.wav" type="audio/wav"></ts-source>
+                
+            <ts-track title="(E) SSHybX" data-img="multimedia/20220921_beamformers_SSHybrid/2_13/hyb_stft_sshyb1300.png">
+                <ts-source src="multimedia/20220921_beamformers_SSHybrid/2_13/enh_10k_sshyb1300.wav" type="audio/wav"></ts-source>
+                
+            <ts-track title="(E) MPDR" data-img="multimedia/20220921_beamformers_SSHybrid/2_13/hyb_stft_mpdr.png">
+                <ts-source src="multimedia/20220921_beamformers_SSHybrid/2_13/enh_10k_mpdr.wav" type="audio/wav"></ts-source>
+        </div>
+     </div>
+      
+      
+    <div id="A_2_20" class="tabcontent">
+        <p>nSources: 2, Trial: 020, Session: 10, File: 12-00-438, time: 17.65 - 23.60 s</p>
+        <div class="player">
+            <img class="seekable" data-seek-margin-left="4.0" data-seek-margin-right="5.9" src="multimedia/20220921_beamformers_SSHybrid/2_20/hyb_stft_ref.png">
+            <ts-track title="(H) Reference" data-img="multimedia/20220921_beamformers_SSHybrid/2_20/hyb_stft_ref.png">
+                <ts-source src="multimedia/20220921_beamformers_SSHybrid/2_20/enh_10k_ref.wav" type="audio/wav"></ts-source>
+                
+            <ts-track title="Passthrough" data-img="multimedia/20220921_beamformers_SSHybrid/2_20/hyb_stft_pass.png">
+                <ts-source src="multimedia/20220921_beamformers_SSHybrid/2_20/enh_10k_pass.wav" type="audio/wav"></ts-source>
+                
+            <ts-track title="(E) Iso" data-img="multimedia/20220921_beamformers_SSHybrid/2_20/hyb_stft_iso.png">
+                <ts-source src="multimedia/20220921_beamformers_SSHybrid/2_20/enh_10k_iso.wav" type="audio/wav"></ts-source>
+                
+            <ts-track title="(E) SSHyb" data-img="multimedia/20220921_beamformers_SSHybrid/2_20/hyb_stft_sshyb.png">
+                <ts-source src="multimedia/20220921_beamformers_SSHybrid/2_20/enh_10k_sshyb.wav" type="audio/wav"></ts-source>
+                
+            <ts-track title="(E) SSHybX" data-img="multimedia/20220921_beamformers_SSHybrid/2_20/hyb_stft_sshyb1300.png">
+                <ts-source src="multimedia/20220921_beamformers_SSHybrid/2_20/enh_10k_sshyb1300.wav" type="audio/wav"></ts-source>
+                
+            <ts-track title="(E) MPDR" data-img="multimedia/20220921_beamformers_SSHybrid/2_20/hyb_stft_mpdr.png">
+                <ts-source src="multimedia/20220921_beamformers_SSHybrid/2_20/enh_10k_mpdr.wav" type="audio/wav"></ts-source>
+        </div>
+     </div>
+    
+    
+    <div id="A_1_9" class="tabcontent">
+        <p>nSources: 1, Trial: 009, Session: 9, File: 14-00-459, time: 43.50 - 49.45 s</p>
+        <div class="player">
+            <img class="seekable" data-seek-margin-left="4.0" data-seek-margin-right="5.9" src="multimedia/20220921_beamformers_SSHybrid/1_9/hyb_stft_ref.png">
+            <ts-track title="(H) Reference" data-img="multimedia/20220921_beamformers_SSHybrid/1_9/hyb_stft_ref.png">
+                <ts-source src="multimedia/20220921_beamformers_SSHybrid/1_9/enh_10k_ref.wav" type="audio/wav"></ts-source>
+                
+            <ts-track title="Passthrough" data-img="multimedia/20220921_beamformers_SSHybrid/1_9/hyb_stft_pass.png">
+                <ts-source src="multimedia/20220921_beamformers_SSHybrid/1_9/enh_10k_pass.wav" type="audio/wav"></ts-source>
+                
+            <ts-track title="(E) Iso" data-img="multimedia/20220921_beamformers_SSHybrid/1_9/hyb_stft_iso.png">
+                <ts-source src="multimedia/20220921_beamformers_SSHybrid/1_9/enh_10k_iso.wav" type="audio/wav"></ts-source>
+                
+            <ts-track title="(E) SSHyb" data-img="multimedia/20220921_beamformers_SSHybrid/1_9/hyb_stft_sshyb.png">
+                <ts-source src="multimedia/20220921_beamformers_SSHybrid/1_9/enh_10k_sshyb.wav" type="audio/wav"></ts-source>
+                
+            <ts-track title="(E) SSHybX" data-img="multimedia/20220921_beamformers_SSHybrid/1_9/hyb_stft_sshyb1300.png">
+                <ts-source src="multimedia/20220921_beamformers_SSHybrid/1_9/enh_10k_sshyb1300.wav" type="audio/wav"></ts-source>
+                
+            <ts-track title="(E) MPDR" data-img="multimedia/20220921_beamformers_SSHybrid/1_9/hyb_stft_mpdr.png">
+                <ts-source src="multimedia/20220921_beamformers_SSHybrid/1_9/enh_10k_mpdr.wav" type="audio/wav"></ts-source>
+        </div>
+     </div>
+    
+    <div id="A_1_14" class="tabcontent">
+        <p>nSources: 1, Trial: 014, Session: 2, File: 16-00-507, time: 38.90 - 44.85 s</p>
+        <div class="player">
+            <img class="seekable" data-seek-margin-left="4.0" data-seek-margin-right="5.9" src="multimedia/20220921_beamformers_SSHybrid/1_14/hyb_stft_ref.png">
+            <ts-track title="(H) Reference" data-img="multimedia/20220921_beamformers_SSHybrid/1_14/hyb_stft_ref.png">
+                <ts-source src="multimedia/20220921_beamformers_SSHybrid/1_14/enh_10k_ref.wav" type="audio/wav"></ts-source>
+                
+            <ts-track title="Passthrough" data-img="multimedia/20220921_beamformers_SSHybrid/1_14/hyb_stft_pass.png">
+                <ts-source src="multimedia/20220921_beamformers_SSHybrid/1_14/enh_10k_pass.wav" type="audio/wav"></ts-source>
+                
+            <ts-track title="(E) Iso" data-img="multimedia/20220921_beamformers_SSHybrid/1_14/hyb_stft_iso.png">
+                <ts-source src="multimedia/20220921_beamformers_SSHybrid/1_14/enh_10k_iso.wav" type="audio/wav"></ts-source>
+                
+            <ts-track title="(E) SSHyb" data-img="multimedia/20220921_beamformers_SSHybrid/1_14/hyb_stft_sshyb.png">
+                <ts-source src="multimedia/20220921_beamformers_SSHybrid/1_14/enh_10k_sshyb.wav" type="audio/wav"></ts-source>
+                
+            <ts-track title="(E) SSHybX" data-img="multimedia/20220921_beamformers_SSHybrid/1_14/hyb_stft_sshyb1300.png">
+                <ts-source src="multimedia/20220921_beamformers_SSHybrid/1_14/enh_10k_sshyb1300.wav" type="audio/wav"></ts-source>
+                
+            <ts-track title="(E) MPDR" data-img="multimedia/20220921_beamformers_SSHybrid/1_14/hyb_stft_mpdr.png">
+                <ts-source src="multimedia/20220921_beamformers_SSHybrid/1_14/enh_10k_mpdr.wav" type="audio/wav"></ts-source>
+        </div>
+     </div>
+        
+     
+     <div id="A_3_2" class="tabcontent">
+         <p>nSources: 3, Trial: 002, Session: 3, File: 05-00-352, time: 9.00 - 14.95 s</p>
+         <div class="player">
+             <img class="seekable" data-seek-margin-left="4.0" data-seek-margin-right="5.9" src="multimedia/20220921_beamformers_SSHybrid/3_2/hyb_stft_ref.png">
+             <ts-track title="(H) Reference" data-img="multimedia/20220921_beamformers_SSHybrid/3_2/hyb_stft_ref.png">
+                 <ts-source src="multimedia/20220921_beamformers_SSHybrid/3_2/enh_10k_ref.wav" type="audio/wav"></ts-source>
+                 
+             <ts-track title="Passthrough" data-img="multimedia/20220921_beamformers_SSHybrid/3_2/hyb_stft_pass.png">
+                 <ts-source src="multimedia/20220921_beamformers_SSHybrid/3_2/enh_10k_pass.wav" type="audio/wav"></ts-source>
+                 
+             <ts-track title="(E) Iso" data-img="multimedia/20220921_beamformers_SSHybrid/3_2/hyb_stft_iso.png">
+                 <ts-source src="multimedia/20220921_beamformers_SSHybrid/3_2/enh_10k_iso.wav" type="audio/wav"></ts-source>
+                 
+             <ts-track title="(E) SSHyb" data-img="multimedia/20220921_beamformers_SSHybrid/3_2/hyb_stft_sshyb.png">
+                 <ts-source src="multimedia/20220921_beamformers_SSHybrid/3_2/enh_10k_sshyb.wav" type="audio/wav"></ts-source>
+                 
+             <ts-track title="(E) SSHybX" data-img="multimedia/20220921_beamformers_SSHybrid/3_2/hyb_stft_sshyb1300.png">
+                 <ts-source src="multimedia/20220921_beamformers_SSHybrid/3_2/enh_10k_sshyb1300.wav" type="audio/wav"></ts-source>
+                 
+             <ts-track title="(E) MPDR" data-img="multimedia/20220921_beamformers_SSHybrid/3_2/hyb_stft_mpdr.png">
+                 <ts-source src="multimedia/20220921_beamformers_SSHybrid/3_2/enh_10k_mpdr.wav" type="audio/wav"></ts-source>
+         </div>
+      </div>
+     
+        
+    <script>
+    function openCity(evt, cityName) {
+      var i, tabcontent, tablinks;
+      tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+      }
+      tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+      document.getElementById(cityName).style.display = "block";
+      evt.currentTarget.className += " active";
+    }
+
+        document.getElementById("defaultOpen").click();
+    </script>
+    
+
+<script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="crossorigin="anonymous"></script>
+<script src="./js/trackswitch.js"></script>
+
+
+<script type="text/javascript">
+    jQuery(document).ready(function() {
+       var settings = {
+           onlyradiosolo: true,
+           repeat: true,
+           tabview: true,
+          };
+        jQuery(".player").trackSwitch(settings); // All other players are default
+    });
+</script>
 
 </body>
 </html>
